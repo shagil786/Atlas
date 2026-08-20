@@ -2,22 +2,41 @@
 
 A focused take-home implementation for the Atlas AI Software Engineer assignment. It models a tax accountant’s document checklist, derives requirements from household employment data, stores uploaded files in RustFS, and routes uncertain classifications to human review.
 
-## Run locally
+## Quick start with Docker
+
+The recommended demo path starts both Atlas and RustFS with one command:
+
+```bash
+docker-compose up --build
+```
+
+Open [http://localhost:8000](http://localhost:8000). The RustFS console is available at [http://localhost:9001](http://localhost:9001).
+
+Stop the demo with:
+
+```bash
+docker-compose down
+```
+
+## Demo credentials
+
+These are seeded local-demo accounts only; they are not production credentials.
+
+- Accountant — username `accountant`, password `accountant-demo`
+- Reviewer — username `reviewer`, password `reviewer-demo`
+
+The accountant can upload documents, manage requirements, and view the review queue. The reviewer can approve or reject uncertain documents.
+
+## Local Python development
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-docker run --rm -d --name atlas-rustfs -p 9000:9000 -p 9001:9001 rustfs/rustfs:latest /data
 uvicorn app.main:app --reload
 ```
 
-Open http://localhost:8000. Demo credentials:
-
-- Accountant: `accountant` / `accountant-demo`
-- Reviewer: `reviewer` / `reviewer-demo`
-
-For the full app stack, use `docker-compose up --build` (or `docker compose up --build` when the Compose plugin is available). The application expects RustFS at port 9000 and creates the `atlas-documents` bucket on first upload.
+The Python server expects RustFS at port 9000. For a standalone RustFS dependency, run `rustfs/rustfs:latest` on ports 9000 and 9001 before starting Uvicorn.
 
 To reseed a fresh local database without starting the server:
 
@@ -28,10 +47,20 @@ To reseed a fresh local database without starting the server:
 ## Test
 
 ```bash
-pytest -q
+.venv/bin/pytest -q
+python3 tests/browser_smoke.py
 ```
 
-The domain tests run without RustFS. The RustFS integration test runs automatically when the configured service is available and skips only when RustFS is unavailable.
+The latest verified suite is 19 passed. The domain and API tests run without a browser. The RustFS integration test runs automatically when the configured service is available and skips only when RustFS is unavailable. The browser smoke test covers desktop and mobile layouts, login, upload, navigation, and reviewer approval.
+
+## Demo pages and pagination
+
+- `/client` — Overview with collection metrics and recent activity
+- `/client/documents` — Required documents and received-file inbox
+- `/client/review` — Attention queue and reviewer actions
+- `/client/settings` — Client/user details and accountant requirement overrides
+
+Requirements, received documents, and review items use server-side pagination with 10 records per page. Pagination controls appear only when a section has more than 10 records. The table and inbox regions are independently scrollable.
 
 ## Product decisions
 
@@ -49,8 +78,11 @@ Official fixture sources:
 
 ## Demo path
 
-1. Sign in as `accountant` and review the collection status.
-2. Upload a file named like `w2_2025_rohan_patel_harbor_finance.pdf`.
-3. Sign in as `reviewer` and correct/approve any low-confidence file through the review API.
-4. Show that wrong-year, unknown-person, and unreadable files remain in the attention queue.
-5. Explain the stable-key reconciliation behavior and test coverage.
+1. Start the stack with `docker-compose up --build`.
+2. Sign in as `accountant` and review the Overview and Documents pages.
+3. Upload a file named like `w2_2025_rohan_patel_harbor_finance.pdf`.
+4. Use Settings to add an unanticipated accountant requirement.
+5. Sign out and sign in as `reviewer`.
+6. Open Needs review and approve or reject an uncertain document.
+7. Use the pagination controls after more than 10 requirements, documents, or review items exist.
+8. Explain stable-key reconciliation, exact matching, and the 19-test verification result.
