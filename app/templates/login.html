@@ -1,0 +1,3 @@
+{% extends "base.html" %}{% block title %}Sign in · Atlas{% endblock %}{% block body %}
+<main class="auth-shell"><section class="auth-card"><span class="eyebrow">ATLAS AI</span><h1>Document collection workspace</h1><p class="muted">Sign in to review the Patel household’s tax documents.</p>{% if error %}<div class="alert danger" role="alert">{{ error }}</div>{% endif %}<form method="post"><label>Username<input name="username" autocomplete="username" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><button class="primary" type="submit">Sign in</button></form><p class="hint">Demo: accountant / accountant-demo · reviewer / reviewer-demo</p></section></main>
+{% endblock %}

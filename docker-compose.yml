@@ -1,0 +1,28 @@
+services:
+  app:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      DATABASE_PATH: /app/data/atlas.db
+      RUSTFS_ENDPOINT: http://rustfs:9000
+      RUSTFS_ACCESS_KEY: atlas
+      RUSTFS_SECRET_KEY: atlas-secret
+      RUSTFS_BUCKET: atlas-documents
+      SESSION_SECRET: local-demo-secret
+    volumes:
+      - atlas-data:/app/data
+    depends_on:
+      rustfs:
+        condition: service_started
+  rustfs:
+    image: rustfs/rustfs:latest
+    command: ["/data"]
+    ports: ["9000:9000", "9001:9001"]
+    environment:
+      RUSTFS_ROOT_USER: atlas
+      RUSTFS_ROOT_PASSWORD: atlas-secret
+    volumes:
+      - rustfs-data:/data
+volumes:
+  atlas-data:
+  rustfs-data:
