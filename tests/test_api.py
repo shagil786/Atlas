@@ -75,6 +75,12 @@ def test_accountant_can_add_manual_requirement():
         assert response.status_code == 303
 
 
+def test_accountant_manual_requirement_accepts_household_select_value():
+    with authenticated_client() as client:
+        response = client.post("/requirements/manual", data={"doc_type": "1099-household", "tax_year": "2025", "person_id": ""}, follow_redirects=False)
+        assert response.status_code == 303
+
+
 def test_reviewer_cannot_change_requirements():
     with authenticated_client("reviewer", "reviewer-demo") as client:
         response = client.post("/requirements/reconcile", follow_redirects=False)

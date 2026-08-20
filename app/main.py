@@ -237,13 +237,14 @@ def override_requirement(requirement_id: int, decision: str = Form(...), reason:
 
 
 @app.post("/requirements/manual")
-def add_manual_requirement(doc_type: str = Form(...), tax_year: int = Form(...), person_id: int | None = Form(None), employer: str = Form(""), user=Depends(require_role("accountant"))):
+def add_manual_requirement(doc_type: str = Form(...), tax_year: int = Form(...), person_id: str = Form(""), employer: str = Form(""), user=Depends(require_role("accountant"))):
+    parsed_person_id = int(person_id) if person_id.strip() else None
     if not doc_type.strip() or tax_year < 2000 or tax_year > 2100:
         raise HTTPException(422, "Document type and a valid tax year are required")
     with connect() as db:
         client = db.execute("SELECT * FROM clients LIMIT 1").fetchone()
         stable_key = f"manual:{uuid.uuid4()}"
-        db.execute("INSERT INTO requirements(client_id,stable_key,doc_type,tax_year,person_id,employer,source_rule,status,manual) VALUES (?,?,?,?,?,?,?,'outstanding',1)", (client["id"], stable_key, doc_type.strip().lower(), tax_year, person_id, employer.strip() or None, "manual"))
+        db.execute("INSERT INTO requirements(client_id,stable_key,doc_type,tax_year,person_id,employer,source_rule,status,manual) VALUES (?,?,?,?,?,?,?,'outstanding',1)", (client["id"], stable_key, doc_type.strip().lower(), tax_year, parsed_person_id, employer.strip() or None, "manual"))
         apply_matches(db, client["id"])
     return RedirectResponse("/client?message=Manual requirement added", status_code=303)
 
