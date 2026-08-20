@@ -134,12 +134,58 @@ def logout():
 
 @app.get("/client", response_class=HTMLResponse)
 def dashboard(request: Request, user=Depends(require_user)):
+    context = client_page_context("overview", user)
+    context.update({"request": request, "message": request.query_params.get("message")})
+    return templates.TemplateResponse("dashboard.html", context)
+
+
+def client_page_context(active_page: str, user):
     with connect() as db:
         summary = client_summary(db)
         people = [row_dict(r) for r in db.execute("SELECT * FROM people ORDER BY name").fetchall()]
         requirements = [row_dict(r) for r in db.execute("SELECT r.*, p.name person_name FROM requirements r LEFT JOIN people p ON p.id=r.person_id ORDER BY status='outstanding' DESC, r.doc_type, p.name").fetchall()]
         documents = [row_dict(r) for r in db.execute("SELECT * FROM documents ORDER BY created_at DESC").fetchall()]
-    return templates.TemplateResponse("dashboard.html", {"request": request, "user": user, "summary": summary, "people": people, "requirements": requirements, "documents": documents, "message": request.query_params.get("message")})
+    return {"user": user, "summary": summary, "people": people, "requirements": requirements, "documents": documents, "active_page": active_page}
+
+
+def page_number(request: Request, name: str) -> int:
+    try:
+        return max(1, int(request.query_params.get(name, "1")))
+    except ValueError:
+        return 1
+
+
+def paginate(items: list, page: int, per_page: int = 10):
+    total = len(items)
+    pages = max(1, (total + per_page - 1) // per_page)
+    page = min(page, pages)
+    start = (page - 1) * per_page
+    return items[start:start + per_page], {"page": page, "pages": pages, "total": total}
+
+
+@app.get("/client/documents", response_class=HTMLResponse)
+def documents_page(request: Request, user=Depends(require_user)):
+    context = client_page_context("documents", user)
+    context["requirements"], context["requirements_pagination"] = paginate(context["requirements"], page_number(request, "requirements_page"))
+    context["documents"], context["documents_pagination"] = paginate(context["documents"], page_number(request, "documents_page"))
+    context.update({"request": request, "message": request.query_params.get("message")})
+    return templates.TemplateResponse("documents.html", context)
+
+
+@app.get("/client/review", response_class=HTMLResponse)
+def review_page(request: Request, user=Depends(require_user)):
+    context = client_page_context("review", user)
+    review_documents = [doc for doc in context["documents"] if doc["state"] in {"needs_review", "unreadable"}]
+    context["review_documents"], context["review_pagination"] = paginate(review_documents, page_number(request, "review_page"))
+    context.update({"request": request, "message": request.query_params.get("message")})
+    return templates.TemplateResponse("review.html", context)
+
+
+@app.get("/client/settings", response_class=HTMLResponse)
+def settings_page(request: Request, user=Depends(require_user)):
+    context = client_page_context("settings", user)
+    context.update({"request": request, "message": request.query_params.get("message"), "show_upload": False})
+    return templates.TemplateResponse("settings.html", context)
 
 
 @app.post("/documents")
@@ -224,7 +270,7 @@ def review_form(document_id: int, action: str = Form(...), doc_type: str = Form(
         db.execute("UPDATE documents SET doc_type=?, tax_year=?, person_name=?, employer=?, state=? WHERE id=?", (doc_type or document["doc_type"], parsed_tax_year or document["tax_year"], person_name or document["person_name"], employer or document["employer"], "approved" if action == "approve" else "rejected", document_id))
         db.execute("INSERT INTO reviews(document_id,reviewer_id,corrections,decision,notes) VALUES (?,?,?,?,?)", (document_id, user["id"], json.dumps({"doc_type": doc_type, "tax_year": parsed_tax_year, "person_name": person_name, "employer": employer}), action, notes))
         apply_matches(db, document["client_id"])
-    return RedirectResponse("/client?message=Review decision saved", status_code=303)
+    return RedirectResponse("/client/review?message=Review decision saved", status_code=303)
 
 
 @app.get("/api/v1/client/summary")

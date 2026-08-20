@@ -1,0 +1,7 @@
+{% extends "client_base.html" %}
+{% block page_title %}Settings · Atlas{% endblock %}
+{% block show_upload %}false{% endblock %}
+{% block page_content %}
+<div class="page-intro"><div><span class="eyebrow">SETTINGS</span><h2>Workspace settings</h2><p class="muted">Reference information for this collection workspace.</p></div></div>
+<section class="settings-grid"><div class="panel settings-card"><span class="eyebrow">CLIENT</span><h2>{{ summary.client.household_name }}</h2><dl><dt>Filing status</dt><dd>{{ summary.client.filing_status|replace('_',' ')|title }}</dd><dt>Target tax year</dt><dd>{{ summary.client.target_year }}</dd><dt>Prior tax year</dt><dd>{{ summary.client.prior_year }}</dd></dl></div><div class="panel settings-card"><span class="eyebrow">SIGNED-IN USER</span><h2>{{ user.username }}</h2><dl><dt>Role</dt><dd>{{ user.role|title }}</dd><dt>Access</dt><dd>{% if user.role == 'accountant' %}Collection management{% else %}Document review{% endif %}</dd></dl></div></section>
+{% endblock %}
