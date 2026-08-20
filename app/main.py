@@ -102,6 +102,11 @@ def healthz():
     return {"status": "ok"}
 
 
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse("/login", status_code=307)
+
+
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request, "error": None})
