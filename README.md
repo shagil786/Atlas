@@ -85,4 +85,4 @@ Official fixture sources:
 5. Sign out and sign in as `reviewer`.
 6. Open Needs review and approve or reject an uncertain document.
 7. Use the pagination controls after more than 10 requirements, documents, or review items exist.
-8. Explain stable-key reconciliation, exact matching, and the 19-test verification result.
+8. Observe stable-key reconciliation and exact matching as the collection status updates.
