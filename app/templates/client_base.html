@@ -4,12 +4,15 @@
 <div class="app-shell">
   <aside class="sidebar">
     <div class="brand"><span class="brand-mark">A</span><span>Atlas</span></div>
-    <nav aria-label="Primary">
+    <details class="nav-shell" open>
+      <summary>Menu <span aria-hidden="true">⌄</span></summary>
+      <nav aria-label="Primary">
       <a class="{{ 'active' if active_page == 'overview' else '' }}" href="/client">Overview</a>
       <a class="{{ 'active' if active_page == 'documents' else '' }}" href="/client/documents">Documents</a>
       <a class="{{ 'active' if active_page == 'review' else '' }}" href="/client/review">Needs review <span class="count">{{ summary.attention_count }}</span></a>
       <a class="{{ 'active' if active_page == 'settings' else '' }}" href="/client/settings">Settings</a>
-    </nav>
+      </nav>
+    </details>
     <div class="user-box">
       <div class="user-identity"><span class="user-avatar">{{ user.username[0]|upper }}</span><div><strong>{{ user.username|title }}</strong><span>{{ user.role|title }}</span></div></div>
       <form method="post" action="/logout"><button class="link-button">Sign out</button></form>

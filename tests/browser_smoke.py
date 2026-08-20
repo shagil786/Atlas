@@ -29,7 +29,9 @@ def run():
             page.wait_for_url(f"{BASE_URL}/client")
             assert page.get_by_role("heading", name="Patel household").is_visible()
             assert page.get_by_text("Required documents").is_visible()
-            assert page.get_by_role("link", name="Needs review").is_visible()
+            if viewport["width"] <= 560 and page.locator("details").get_attribute("open") is None:
+                page.get_by_text("Menu").click()
+            assert page.locator(".nav-shell a", has_text="Needs review").is_visible()
             with page.expect_navigation(wait_until="networkidle"):
                 page.locator("input[type=file]").set_input_files(str(FIXTURE))
             assert page.get_by_text("Document uploaded").is_visible() or page.get_by_text("Duplicate document detected").is_visible()
@@ -37,7 +39,7 @@ def run():
                 with page.expect_navigation(wait_until="networkidle"):
                     page.locator("input[type=file]").set_input_files(str(review_fixture))
                 page.goto(f"{BASE_URL}/client/review", wait_until="networkidle")
-                assert page.get_by_role("button", name="Approve").is_visible()
+                assert page.get_by_text("Reviewer action required").first.is_visible()
                 page.get_by_role("button", name="Sign out").click()
                 page.wait_for_url(f"{BASE_URL}/login")
                 page.get_by_label("Username").fill("reviewer")
